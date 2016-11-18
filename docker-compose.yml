@@ -1,12 +1,27 @@
+mysqlpiwigo:
+   image: mysql:5.5 
+   volumes:
+      - /home/hualinsu/piwigo/mysql/:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+   environment:
+      - MYSQL_ROOT_PASSWORD=piwigo
+      - MYSQL_DATABASE=piwigo
+      - MYSQL_USER=piwigo
+      - MYSQL_PASSWORD=piwigo
+
 piwigo-nginx:
   build: .
   dockerfile: Dockerfile.nginx
   container_name: piwigo-nginx
   ports:
-    - "8081:80"
+    - "80:80"
   volumes_from:
     - piwigo-fpm
-
+  links:
+    - mysqlpiwigo:mysql
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    
 piwigo-fpm:
   build: .
   dockerfile: Dockerfile.fpm
@@ -14,10 +29,13 @@ piwigo-fpm:
   volumes_from:
     - piwigo-data
   volumes:
-    - /srv/piwigo/galleries:/var/www/piwigo/galleries
-    - /srv/piwigo/upload:/var/www/piwigo/upload
+    - /home/hualinsu/piwigo/galleries:/var/www/piwigo/galleries:ro
+    - /home/hualinsu/piwigo/upload:/var/www/piwigo/upload:rw
+    - /etc/localtime:/etc/localtime:ro
 
 piwigo-data:
   build: .
   dockerfile: Dockerfile.piwigo
   container_name: piwigo-data
+  volumes:
+     - /etc/localtime:/etc/localtime:ro

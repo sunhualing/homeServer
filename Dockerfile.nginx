@@ -1,7 +1,9 @@
-FROM ubuntu:latest
-MAINTAINER hello@heiber.im
+FROM ubuntu:14.04
 
 ENV DEBIAN_FRONTEND noninteractive
+
+
+RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak
 
 RUN apt-get update -qq && apt-get install -y wget
 

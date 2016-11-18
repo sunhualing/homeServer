@@ -1,17 +1,16 @@
-FROM ubuntu:latest
-MAINTAINER hello@heiber.im
+FROM ubuntu:14.04
+MAINTAINER  sunhualing
 
-ENV DEBIAN_FRONTEND noninteractive
-
-RUN apt-get update -qq && apt-get install -y software-properties-common
 
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 
-RUN apt-add-repository -y ppa:ondrej/php5-5.6 && apt-get update -qq
-
-RUN apt-get install -y php5-fpm php5-gd php5-mysql && mkdir -p /run/php /var/www
+RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak
+RUN apt-get install -qy php5 php5-fpm php5-mysql php5-gd php5-intl php5-imagick \
+                        php5-mcrypt php5-curl php5-cli php5-xdebug dcraw mediainfo imagemagick
+RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN mkdir -p /run/php /var/www
 ADD fpm-www.conf /etc/php5/fpm/pool.d/www.conf
 
 VOLUME ["/run/php"]
