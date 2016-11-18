@@ -1,2 +1,3 @@
 *.swp
-docker-compose
+office-proxy.sh
+office-sources.list
