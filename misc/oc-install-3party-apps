@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+EXTCONF="${1}"
+EXTAPPDIR="${2}"
+
+if [ "$#" != 2 ]; then
+    echo "Usage: $0 CONFIG APP_DIR"
+	exit 1
+fi
+
+if [ ! -d "${EXTAPPDIR}" ]; then
+	echo "App dir not located at ${EXTAPPDIR}."
+	exit 1
+fi
+
+if [ ! -r "${EXTCONF}" ]; then
+	echo "Configuration file ${EXTCONF} is not readable."
+	exit 1
+fi
+
+while read line
+do
+	# filter empty and commented lines
+	[ "${line}" == "" ] && continue
+	[ "${line:0:1}" == "#" ] && continue
+
+	# parsing
+	IFS="!" read -ra entry <<< "${line}"
+
+	NAME="${entry[0]}"
+	CMDL="${entry[1]}"
+
+	echo ""
+	echo "-=> work on ... ${NAME} "
+
+	# yea - its secure nightmare here, but we call this only in a docker
+	# container at buildtime
+	if [ ! -z "${CMDL}" ]; then
+		pushd ""
+		while IFS=";" read -ra cmdarr; do
+			for cmd in "${cmdarr[@]}"; do
+				[ -z "${cmd}" ] && continue
+				echo "::: execute \"${cmd}\""
+				pushd "${EXTAPPDIR}"
+				${cmd}
+				popd
+			done
+		done <<< "${CMDL}"
+	fi
+
+	echo "<=- ${NAME} done"
+done < "${EXTCONF}"

@@ -1,3 +1,21 @@
+# Where to store data and database ?
+export docker_owncloud_permanent_storage="~/owncloud_data"
+
+# SSL Certificates to use.
+export docker_owncloud_ssl_cert="../certs/cloud.cert"
+export docker_owncloud_ssl_key="../certs/cloud.key"
+
+# Servername
+export docker_owncloud_servername="localhost"
+
+export docker_owncloud_http_port="11180"
+export docker_owncloud_https_port="443"
+export docker_owncloud_in_root_path="1"
+
+#export docker_owncloud_mariadb_root_password=$(pwgen --secure 40 1)
+#export docker_owncloud_mariadb_user_password=$(pwgen --secure 40 1)
+
+
 mysqlpiwigo:
    image: mysql:5.5 
    volumes:
@@ -39,3 +57,25 @@ piwigo-data:
   container_name: piwigo-data
   volumes:
      - /etc/localtime:/etc/localtime:ro
+
+owncloud-server:
+  container_name: owncloud-server
+  dockerfile: Dockerfile.owncloud
+  links:
+    - mysqlpiwigo:mysql
+  ports:
+    - "${docker_owncloud_http_port}:80"
+    - "${docker_owncloud_https_port}:443"
+  volumes:
+    - ${docker_owncloud_permanent_storage}/data:/var/www/owncloud/data
+    - ${docker_owncloud_permanent_storage}/additional_apps:/var/www/owncloud/apps_persistent
+    - ${docker_owncloud_permanent_storage}/config:/owncloud
+    - ${docker_owncloud_ssl_cert}:/owncloud.cert:ro
+    - ${docker_owncloud_ssl_key}:/owncloud.key:ro
+    - /etc/localtime:/etc/localtime:ro
+
+  environment:
+    - OWNCLOUD_IN_ROOTPATH=${docker_owncloud_in_root_path}
+    - OWNCLOUD_SERVERNAME=${docker_owncloud_servername}
+    - SSL_CERT="/owncloud.cert"
+    - SSL_KEY="/owncloud.key"
