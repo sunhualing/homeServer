@@ -40,6 +40,9 @@ owncloud-server:
     - /srv/homeServer/owc/config:/var/www/html/config  
     - /srv/homeServer/owc/data:/var/www/html/data
     - /etc/localtime:/etc/localtime:ro
+    - /var/log
+    - /var/log/owncloud:/var/log/apache2
+
   ports:
     - "11380:80"
     - "11443:443"
