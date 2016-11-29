@@ -1,23 +1,6 @@
-# Where to store data and database ?
-export docker_owncloud_permanent_storage="~/owncloud_data"
-
-# SSL Certificates to use.
-export docker_owncloud_ssl_cert="../certs/cloud.cert"
-export docker_owncloud_ssl_key="../certs/cloud.key"
-
-# Servername
-export docker_owncloud_servername="localhost"
-
-export docker_owncloud_http_port="11180"
-export docker_owncloud_https_port="443"
-export docker_owncloud_in_root_path="1"
-
-#export docker_owncloud_mariadb_root_password=$(pwgen --secure 40 1)
-#export docker_owncloud_mariadb_user_password=$(pwgen --secure 40 1)
-
-
 mysqlpiwigo:
-   image: mysql:5.5 
+   image: mysql:5.5
+   container_name: mysql
    volumes:
       - /home/hualinsu/piwigo/mysql/:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
@@ -26,56 +9,40 @@ mysqlpiwigo:
       - MYSQL_DATABASE=piwigo
       - MYSQL_USER=piwigo
       - MYSQL_PASSWORD=piwigo
-
-piwigo-nginx:
-  build: .
-  dockerfile: Dockerfile.nginx
-  container_name: piwigo-nginx
-  ports:
-    - "80:80"
-  volumes_from:
-    - piwigo-fpm
-  links:
-    - mysqlpiwigo:mysql
-  volumes:
-    - /etc/localtime:/etc/localtime:ro
-    
-piwigo-fpm:
-  build: .
-  dockerfile: Dockerfile.fpm
-  container_name: piwigo-fpm
-  volumes_from:
-    - piwigo-data
-  volumes:
-    - /home/hualinsu/piwigo/galleries:/var/www/piwigo/galleries:ro
-    - /home/hualinsu/piwigo/upload:/var/www/piwigo/upload:rw
-    - /etc/localtime:/etc/localtime:ro
-
-piwigo-data:
-  build: .
-  dockerfile: Dockerfile.piwigo
-  container_name: piwigo-data
-  volumes:
-     - /etc/localtime:/etc/localtime:ro
+piwigo:
+   image: mathieuruellan/piwigo
+   container_name: piwigo
+   privileged: true
+   links:
+      - mysqlpiwigo:mysql 
+   volumes:
+      - /home/hualinsu/piwigo/data/galleries:/var/www/galleries
+      - /home/hualinsu/piwigo/data/local:/var/www/local
+      - /home/hualinsu/piwigo/data/plugins:/var/www/plugins
+      - /home/hualinsu/piwigo/data/themes:/var/www/themes
+      - /home/hualinsu/piwigo/cache:/var/www/_data/i
+      - /home/hualinsu/piwigo/upload:/var/www/upload"
+      - /var/log
+      - /var/log/piwigo:/var/log/apache2
+   ports:
+      - "11280:80"
+   hostname: piwigo
+   domainname: ourlab.xin
 
 owncloud-server:
-  container_name: owncloud-server
-  dockerfile: Dockerfile.owncloud
+  image: owncloud:latest
+  container_name: oc
+  privileged: true
   links:
-    - mysqlpiwigo:mysql
-  ports:
-    - "${docker_owncloud_http_port}:80"
-    - "${docker_owncloud_https_port}:443"
+      - mysqlpiwigo:mysql 
   volumes:
-    - ${docker_owncloud_permanent_storage}/data:/var/www/owncloud/data
-    - ${docker_owncloud_permanent_storage}/additional_apps:/var/www/owncloud/apps_persistent
-    - ${docker_owncloud_permanent_storage}/config:/owncloud
-    - ${docker_owncloud_ssl_cert}:/owncloud.cert:ro
-    - ${docker_owncloud_ssl_key}:/owncloud.key:ro
+    - /srv/homeServer/owc/apps:/var/www/html/apps
+    - /srv/homeServer/owc/config:/var/www/html/config  
+    - /srv/homeServer/owc/data:/var/www/html/data
     - /etc/localtime:/etc/localtime:ro
+  ports:
+    - "11380:80"
+    - "11443:443"
+  hostname: owncloud
+  domainname: ourlab.xin
 
-  environment:
-    - OWNCLOUD_IN_ROOTPATH=${docker_owncloud_in_root_path}
-    - OWNCLOUD_SERVERNAME=${docker_owncloud_servername}
-    - SSL_CERT="/owncloud.cert"
-    - SSL_KEY="/owncloud.key"

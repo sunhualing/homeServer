@@ -1,3 +1,0 @@
-#!/bin/sh
-
-sudo --user www-data php --file /var/www/owncloud/occ "$@"
